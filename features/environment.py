@@ -33,6 +33,7 @@ def browser_init(context, browser_name, headless):
     # context.driver = webdriver.Firefox(service=service)
 
 
+
     """with chrome"""
     # driver_path = ChromeDriverManager().install()
     # service = Service(driver_path)
