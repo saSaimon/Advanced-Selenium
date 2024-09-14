@@ -7,21 +7,33 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import JavascriptException
+from time import sleep
 
 
 class Page:
     def __init__(self, driver):
         self.driver = driver
-        self.wait = WebDriverWait(self.driver, 15)
+        self.wait = WebDriverWait(self.driver, 10)
 
     def open_url(self, url):
         """ Navigate to a specified URL. """
         self.driver.get(url)
 
+    def back(self):
+        """Getting back to the previous page and waiting for it to load"""
+        current_url = self.driver.current_url
+        self.driver.back()
+        WebDriverWait(self.driver, 10).until(
+            EC.url_changes(current_url)
+        )
+
     def find_element(self, *locator):
         """ Find a single element by a locator tuple (By, value). """
         try:
+            self.wait_for_element(*locator)
+            assert self.driver.find_element(*locator)
             return self.driver.find_element(*locator)
+
         except NoSuchElementException:
             print(f"Element not found with locator: {locator}")
             return None
@@ -29,13 +41,19 @@ class Page:
     def find_elements(self, *locator):
         """ Find multiple elements by a locator tuple (By, value). """
         try:
+            self.wait_for_element(*locator)
             return self.driver.find_elements(*locator)
         except NoSuchElementException:
             print(f"Elements not found with locator: {locator}")
             return []
 
     def click(self, *locator):
-        self.driver.find_element(*locator).click()
+        try:
+            self.wait_for_element(*locator)
+            self.driver.find_element(*locator).click()
+        except NoSuchElementException:
+            print(f"Elements not found with locator: {locator}")
+            return None
 
     def wait_for_element_click(self, *locator):
         """ Click on an element identified by a locator tuple. """
@@ -46,20 +64,34 @@ class Page:
             print(f"Element not clickable with locator: {locator}")
 
     def input_text(self, text: str, *locator):
-        e = self.driver.find_element(*locator)
-        e.clear()
-        e.send_keys(text)
+        try:
+            self.wait_for_element(*locator)
+            e = self.driver.find_element(*locator)
+            e.clear()
+            e.send_keys(text)
+        except NoSuchElementException:
+            print(f"Element not found with locator: {locator}")
 
-    def verify_text(self, expected_text, *locator):
+    def verify_text(self, expected_text: object, *locator: object, context: object) -> object:
         """ Verify if the element text matches the expected text. """
-        element = self.find_element(*locator)
-        if element:
-            actual_text = element.text
-            assert expected_text == actual_text, f'Expected {expected_text}, but got {actual_text}'
+        # try:
+        #     self.wait_for_element(*locator)
+        #     actual_text = self.driver.find_element(*locator).text
+        # except NoSuchElementException:
+        #     actual_text = self.driver.find_element(*locator).text
+        #     message = f'Expected {expected_text}, but got {actual_text}'
+        #     assert expected_text == actual_text, message
+        #     context.logger.error(message)
+
+        self.wait_for_element(*locator)
+        actual_text = self.driver.find_element(*locator).text
+        message = f'Expected {expected_text}, but got {actual_text}'
+        assert expected_text == actual_text, message
+        context.logger.error(message)
 
     def verify_partial_text(self, expected_partial_text, *locator):
         """ Verify if the element text contains the expected partial text. """
-        element = self.find_element(*locator)
+        element = self.driver.find_element(*locator)
         if element:
             actual_text = element.text
             assert expected_partial_text in actual_text, f'Expected partial text "{expected_partial_text}" not found in "{actual_text}"'
@@ -193,9 +225,6 @@ class Page:
         else:
             print("Element not found for double-click.")
 
-
-
-
     def single_click(self, *locator):
         """ Single click on an element identified by a locator. """
         self.click(*locator)  # Reusing the existing click method.
@@ -273,7 +302,6 @@ class Page:
 
     def url_slicing(self, url):
 
-
         # Split the URL by slashes and take the last part
         parts = url.split('/')
         last_part = parts[-1]
@@ -294,12 +322,104 @@ class Page:
 
             page_source = context.driver.page_source.lower()
             assert self.url_slicing(current_url) in page_source, 'Text not found in the page.'
-            self.verify_api_call_status_code(context, url='https://services-prod.canvas8.com/content/cms', expected_status_code=200)
+            self.verify_api_call_status_code(context, url='https://services-prod.canvas8.com/content/cms',
+                                             expected_status_code=200)
 
         except AssertionError as ae:
             context.logger.error(f"Assertion failed: {ae}")
             # Log the current URL as error if there is an issue
             context.logger.error(f"Error encountered at URL: {current_url}")
 
+    def _wait_for_scroll(self, timeout=2):
+        """Wait for a specified time to allow the page to load or scroll. Adjust 'timeout' as necessary."""
+        import time
+        time.sleep(timeout)
 
+    def scroll_to_bottom_and_verify(self, context):
+        """Scroll to the bottom of the page and verify the scroll was successful."""
+        # Scroll to the bottom of the page
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
+        # Optionally, wait for lazy-loaded content
+        self._wait_for_scroll()
+
+        # Get the total height of the page and current scroll position
+        total_page_height = self.driver.execute_script("return document.body.scrollHeight;")
+        current_scroll_position = self.driver.execute_script("return window.pageYOffset + window.innerHeight;")
+
+        # Verify scroll position
+        if current_scroll_position >= total_page_height:
+            context.logger.info("Successfully scrolled to the bottom.")
+        else:
+            message = f'Expected to be at bottom of page, but was not. Current scroll position: {current_scroll_position}, Total page height: {total_page_height}'
+            context.logger.error(message)
+            assert False, message
+
+    def is_text_visible_in_viewport(self, expected_text, context):
+        """Check if the specified text is visible in a single, specific element within the current viewport."""
+
+        # Find the specific element using the provided locator
+
+        elements = self.driver.find_elements(By.XPATH, f"//*[contains(., '{expected_text}')]")
+        # Verify the expected text matches the element's text
+        for element in elements:
+            # Get the text content of the element
+            actual_text = element.text.strip()
+            if expected_text in actual_text and element.is_displayed():
+                # Execute JavaScript to check if the element is in the viewport
+                self.driver.execute_script("""
+                        var elem = arguments[0], box = elem.getBoundingClientRect();
+                        return (
+                            box.top >= 0 &&
+                            box.left >= 0 &&
+                            box.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                            box.right <= (window.innerWidth || document.documentElement.clientWidth)
+                        );
+                    """, element)
+            else:
+                context.logger.error(f"The text '{expected_text}' does not match or the element is not displayed.")
+                print(f"The text '{expected_text}' does not match or the element is not displayed.")
+                assert False
+
+    def click_element_containing_text(self, text):
+        """Find an element that contains the specified text and click on it."""
+        # Using XPath to find an element that contains the text
+        element = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//*[contains(text(), '{text}')]"))
+        )
+        element.click()
+
+    def get_text_from_element_containing_text(self, text):
+        """Find an element that contains the specified text and return its text."""
+        element = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, f"//*[contains(text(), '{text}')]"))
+        )
+        return element.text
+
+    def verify_url(self, url):
+        """Verify current url is matching as expected URL."""
+        current_url = self.driver.current_url
+        try:
+            assert url == current_url
+        except AssertionError as ae:
+            print(f'Expected{url} but got {current_url}')
+
+    # def previous_page(self):
+    #
+    # """User will get previous page with this methode."""
+    #
+    #     self.driver.back()
+    def previous_page(self):
+        self.driver.back()
+
+    def previous_page(self):
+        """User will get previous page with this methode."""
+        self.driver.back()
+
+    def verify_partial_url(self, url):
+        """Verify partial current url is matching as expected URL."""
+        current_url = self.driver.current_url
+        try:
+            assert url in current_url
+        except AssertionError as ae:
+            print(f'Expected{url} but got {current_url}')

@@ -33,28 +33,29 @@ try:
 except:
     print("Login failed!")
 
+time.sleep(10)
 #Navigate to the registration page
-driver.get(reg_url)
-
-# Fill in registration form
-full_name = driver.find_element(By.CSS_SELECTOR, "#recruiterRegisterFullName")  # Replace with the actual ID
-full_name.send_keys("new_user")
-email_field = driver.find_element(By.CSS_SELECTOR, "#recruiterRegisterEmail")  # Replace with the actual ID
-email_field.send_keys("new_user@example.com")
-password_field = driver.find_element(By.CSS_SELECTOR, "#recruiterRegisterPassword")  # Replace with the actual ID
-password_field.send_keys("your_password")
-# Add other required fields as needed
-
-# Click the register button
-Sign_up_button = driver.find_element(By.CSS_SELECTOR, "#recruiterRegisterFormButton")  # Replace with the actual XPath
-Sign_up_button.click()
-
-# Verify successful registration (adjust the locator as needed)
-try:
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SEECTOR, '[href="/dashboard/my-profile"]')))
-    print("Registration successful!")
-except:
-    print("Registration failed!")
-
-# Close the browser
-driver.quit()
+# driver.get(reg_url)
+#
+# # Fill in registration form
+# full_name = driver.find_element(By.CSS_SELECTOR, "#recruiterRegisterFullName")  # Replace with the actual ID
+# full_name.send_keys("new_user")
+# email_field = driver.find_element(By.CSS_SELECTOR, "#recruiterRegisterEmail")  # Replace with the actual ID
+# email_field.send_keys("new_user@example.com")
+# password_field = driver.find_element(By.CSS_SELECTOR, "#recruiterRegisterPassword")  # Replace with the actual ID
+# password_field.send_keys("your_password")
+# # Add other required fields as needed
+#
+# # Click the register button
+# Sign_up_button = driver.find_element(By.CSS_SELECTOR, "#recruiterRegisterFormButton")  # Replace with the actual XPath
+# Sign_up_button.click()
+#
+# # Verify successful registration (adjust the locator as needed)
+# try:
+#     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SEECTOR, '[href="/dashboard/my-profile"]')))
+#     print("Registration successful!")
+# except:
+#     print("Registration failed!")
+#
+# # Close the browser
+# driver.quit()
