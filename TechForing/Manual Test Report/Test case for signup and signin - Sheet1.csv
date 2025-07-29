@@ -1,0 +1,32 @@
+Test ID,Test Case,Test Steps,Expected Result,Actual Result,Pass/Fail
+TC_AUTH_001,Verify all required fields are present on Sign Up page,Navigate to Sign Up tab → Observe all input fields and buttons,"Full Name, Phone Number, DOB, Gender, Email, Password, Confirm Password, Captcha, Sign Up button should be visible",All fields are present,Pass
+TC_AUTH_002,Verify user can successfully sign up with valid data,Fill all fields with valid data → Enter Captcha → Click Sign Up,User account is created and confirmation message appears,User created successfully,Pass
+TC_AUTH_003,Verify error message appears when passwords do not match,Fill all fields → Enter mismatched Password and Confirm Password → Click Sign Up,Error message: 'Passwords do not match',Error message displayed correctly,Pass
+TC_AUTH_004,Verify CAPTCHA must be entered for successful signup,Fill all fields correctly → Do not enter CAPTCHA → Click Sign Up,Signup fails with error message for CAPTCHA,CAPTCHA validation working,Pass
+TC_AUTH_005,Verify all required fields are present on Sign In page,Navigate to Sign In tab,Email and Password input fields should be visible with Sign In button,Sign In form is displayed correctly,Pass
+TC_AUTH_006,Verify user can sign in with correct credentials,Enter registered Email and Password → Click Sign In,User is logged in and redirected to dashboard,Successful login,Pass
+TC_AUTH_007,Verify login fails with incorrect credentials,Enter incorrect email or password → Click Sign In,Login fails with error message,Displays 'Invalid credentials' message,Pass
+TC_AUTH_008,Verify 'Forgot your password?' link is working,Click on 'Forgot your password?',User is redirected to reset password page,Redirects properly,Pass
+TC_AUTH_009,Verify email verification is required after sign up,"1. Complete Sign Up form
+2. Submit
+3. Check inbox and click confirmation link",Email is received with verification link; user must click to activate account,Email sent and verified properly,Pass
+TC_AUTH_010,Verify missing UI message for post-signup confirmation,"1. Submit valid Sign Up form
+2. Observe on-screen feedback",UI should inform user to verify their email,Message shown after submission,Pass
+TC_AUTH_011,Sign up with an already registered email,"1. Go to Sign Up
+2. Enter details using an existing email
+3. Submit",Error message like: “Email already exists”,Displays proper error,Pass
+TC_AUTH_012,Submit empty Sign Up form,"1. Go to Sign Up
+2. Leave all fields blank
+3. Submit",Required field validations shown,Validation triggered,Pass
+TC_AUTH_013,Mismatched passwords during Sign Up,"1. Enter Password and different Confirm Password
+2. Submit",Error: “Passwords does not match”,Error shown,Pass
+TC_AUTH_014,Enter invalid email format,"1. Input john@.com or user.com in email field
+2. Submit",Error: “Please enter a valid email address”,Error shown,Pass
+TC_AUTH_015,Try to log in with unverified email,"1. Sign up with a new email
+2. Don’t click verification link
+3. Try to log in",Login fails with message: “No active account found with the given credentials”,Validation message shown,Pass
+TC_AUTH_016,Try to log in with wrong password,"1. Use correct email and wrong password
+2. Click Sign In","Error message: “No active account found with the given credentials""",Error shown,Pass
+TC_AUTH_017,Email verification with an expired or used link,1. Use already-clicked/expired verification link,Error or redirect with message: “Invalid or expired token”,"Displayed ""Success! Email Verified""",Fail
+TC_AUTH_018,Sign up using letters in phone number,Enter abc123 in phone number field → Submit form,Validation error: “Phone number must contain digits only”,Registration succeeded,Fail
+TC_AUTH_019,Sign up with a future date of birth,Select a DOB such as 28/11/2029 → Submit form,Error: “Date of Birth cannot be in the future”,Allowed without validation,Fail
